@@ -1,1 +1,56 @@
-"<h1>MiniApp Clicker</h1>" 
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clicker Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .click-button {
+            font-size: 20px;
+            padding: 15px;
+            width: 100%;
+            background: #0088cc;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .balance {
+            font-size: 18px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Кликер</h1>
+        <button class="click-button" onclick="tap()">👆 Клик</button>
+        <p class="balance">Баланс: <span id="balance">0</span> тапкоинов</p>
+    </div>
+
+    <script>
+        let balance = 0;
+        function tap() {
+            balance += 1;
+            document.getElementById("balance").innerText = balance;
+            Telegram.WebApp.sendData(JSON.stringify({ action: "tap", balance: balance }));
+        }
+    </script>
+</body>
+</html>
