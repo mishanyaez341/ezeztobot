@@ -11,45 +11,54 @@
             text-align: center;
             background-color: #f4f4f4;
             margin: 0;
-            padding: 0;
+            padding: 20px;
         }
         .container {
             max-width: 400px;
-            margin: 50px auto;
-            padding: 20px;
+            margin: auto;
             background: white;
+            padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
-        .click-button {
-            font-size: 20px;
-            padding: 15px;
+        .btn {
+            display: block;
             width: 100%;
-            background: #0088cc;
-            color: white;
+            padding: 15px;
+            margin-top: 10px;
+            font-size: 18px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
         }
-        .balance {
-            font-size: 18px;
-            margin-top: 20px;
+        .tap-btn {
+            background-color: #ff9800;
+            color: white;
+        }
+        .balance-btn {
+            background-color: #2196F3;
+            color: white;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Кликер</h1>
-        <button class="click-button" onclick="tap()">👆 Клик</button>
-        <p class="balance">Баланс: <span id="balance">0</span> тапкоинов</p>
+        <h1>Tap Clicker</h1>
+        <p>Твои тапкоины: <span id="balance">0</span></p>
+        <button class="btn tap-btn" onclick="tap()">👆 Тап</button>
+        <button class="btn balance-btn" onclick="showBalance()">💰 Баланс</button>
     </div>
 
     <script>
         let balance = 0;
+
         function tap() {
-            balance += 1;
-            document.getElementById("balance").innerText = balance;
-            Telegram.WebApp.sendData(JSON.stringify({ action: "tap", balance: balance }));
+            balance += 10000;
+            document.getElementById("balance").innerText = balance.toLocaleString();
+        }
+
+        function showBalance() {
+            alert("Твой баланс: " + balance.toLocaleString() + " тапкоинов");
         }
     </script>
 </body>
