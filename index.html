@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prime Clicker</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
         import { getDatabase, ref, get, set, update } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
@@ -75,6 +76,7 @@
         });
 
         document.getElementById("exchangeButton").addEventListener("click", function() {
+            const messageBox = document.getElementById("messageBox");
             if (balance >= 100000000) {
                 balance -= 100000000;
                 virts += 100000000;
@@ -83,37 +85,54 @@
                 document.getElementById("virts").innerText = formatNumber(virts);
 
                 update(userRef, { balance, virts });
-                alert("Обмен успешен! 100.000.000 тапкоинов = 100.000.000 виртов");
+                messageBox.innerText = "✅ Обмен успешен! 100.000.000 тапкоинов = 100.000.000 виртов";
+                messageBox.style.display = "block";
             } else {
-                alert("Минимальная сумма для обмена - 100.000.000 тапкоинов");
+                messageBox.innerText = "❌ Минимальная сумма для обмена - 100.000.000 тапкоинов";
+                messageBox.style.display = "block";
             }
+            setTimeout(() => { messageBox.style.display = "none"; }, 3000);
         });
 
         document.getElementById("withdrawButton").addEventListener("click", function() {
             window.open("https://t.me/prime_vivodbot", "_blank");
         });
-
     </script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Press Start 2P', cursive;
             text-align: center;
-            background-color: #f4f4f4;
+            background-color: white;
+            color: black;
             margin: 0;
-            padding: 20px;
+            padding: 0;
         }
         .container {
             max-width: 400px;
-            margin: auto;
+            margin: 20px auto;
             background: white;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
+        .title {
+            font-size: 24px;
+            color: red;
+            margin-bottom: 10px;
+        }
         .info {
-            font-size: 20px;
-            font-weight: bold;
+            font-size: 18px;
             margin: 10px 0;
+        }
+        .message-box {
+            display: none;
+            font-size: 14px;
+            margin: 10px auto;
+            padding: 10px;
+            background-color: white;
+            border: 1px solid black;
+            border-radius: 5px;
+            width: fit-content;
         }
         .tap-btn {
             width: 200px;
@@ -145,20 +164,15 @@
         .withdraw-btn {
             background-color: #f44336;
         }
-        .exchange-btn:active {
-            background-color: #45a049;
-        }
-        .withdraw-btn:active {
-            background-color: #d32f2f;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Prime Clicker</h1>
+        <h1 class="title">Prime Clicker</h1>
         <p class="info">Тапкоины: <span id="balance">0</span></p>
         <p class="info">Вирты: <span id="virts">0</span></p>
         <p class="info">Энергия: <span id="energy">500</span></p>
+        <div id="messageBox" class="message-box"></div>
         <button class="tap-btn" id="tapButton"></button>
         <button class="exchange-btn" id="exchangeButton">Обмен в вирты</button>
         <button class="withdraw-btn" id="withdrawButton">Вывод</button>
