@@ -5,6 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clicker Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCO-9l8xEeO83pvgR7pd__BTIVAV9oFzWU",
+            authDomain: "prime-clicker.firebaseapp.com",
+            databaseURL: "https://prime-clicker-default-rtdb.firebaseio.com/",
+            projectId: "prime-clicker",
+            storageBucket: "prime-clicker.appspot.com",
+            messagingSenderId: "714282767423",
+            appId: "1:714282767423:web:3f1d52ad3b36ac9464948a"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        
+        document.addEventListener("DOMContentLoaded", () => {
+            const tapButton = document.getElementById("tapButton");
+            const balanceEl = document.getElementById("balance");
+            let balance = 0;
+            const clickSound = new Audio("click.ogg");
+            
+            tapButton.addEventListener("click", async () => {
+                clickSound.currentTime = 0;
+                clickSound.play();
+                
+                balance += 10000;
+                balanceEl.innerText = balance.toLocaleString();
+                
+                try {
+                    await set(ref(db, "users/testUser/balance"), balance);
+                } catch (e) {
+                    console.error("Ошибка при записи в Firebase", e);
+                }
+            });
+        });
+    </script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -43,41 +81,5 @@
         <p>Твои тапкоины: <span id="balance">0</span></p>
         <button class="tap-btn" id="tapButton"></button>
     </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
-        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCO-9l8xEeO83pvgR7pd__BTIVAV9oFzWU",
-            authDomain: "prime-clicker.firebaseapp.com",
-            databaseURL: "https://prime-clicker-default-rtdb.firebaseio.com/",
-            projectId: "prime-clicker",
-            storageBucket: "prime-clicker.appspot.com",
-            messagingSenderId: "714282767423",
-            appId: "1:714282767423:web:3f1d52ad3b36ac9464948a"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const userId = "user1";
-        const userRef = ref(db, "users/" + userId);
-
-        async function updateBalance(amount) {
-            const snapshot = await get(userRef);
-            let balance = snapshot.exists() ? snapshot.val().balance : 0;
-            balance += amount;
-            await set(userRef, { balance });
-            document.getElementById("balance").innerText = balance.toLocaleString();
-        }
-
-        let clickSound = new Audio("click.mp3");
-
-        document.getElementById("tapButton").addEventListener("click", () => {
-            clickSound.currentTime = 0;
-            clickSound.play();
-            updateBalance(10000);
-        });
-    </script>
 </body>
 </html>
