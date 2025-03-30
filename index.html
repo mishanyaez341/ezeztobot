@@ -21,23 +21,19 @@
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
-        .btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            margin-top: 10px;
-            font-size: 18px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
         .tap-btn {
-            background-color: #ff9800;
-            color: white;
+            width: 100px;
+            height: 100px;
+            background: url('button-image.png') no-repeat center;
+            background-size: cover;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: inline-block;
+            transition: transform 0.1s ease-in-out;
         }
-        .balance-btn {
-            background-color: #2196F3;
-            color: white;
+        .tap-btn:active {
+            transform: scale(0.9);
         }
     </style>
 </head>
@@ -45,21 +41,30 @@
     <div class="container">
         <h1>Tap Clicker</h1>
         <p>Твои тапкоины: <span id="balance">0</span></p>
-        <button class="btn tap-btn" onclick="tap()">👆 Тап</button>
-        <button class="btn balance-btn" onclick="showBalance()">💰 Баланс</button>
+        <button class="tap-btn" id="tapButton"></button>
     </div>
 
     <script>
         let balance = 0;
+        let clickSound = new Audio("click.ogg");
 
-        function tap() {
-            balance += 10000;
-            document.getElementById("balance").innerText = balance.toLocaleString();
-        }
-
-        function showBalance() {
-            alert("Твой баланс: " + balance.toLocaleString() + " тапкоинов");
-        }
+        document.getElementById("tapButton").addEventListener("click", async function() {
+            try {
+                clickSound.currentTime = 0;
+                await clickSound.play();
+                
+                balance += 10000;
+                document.getElementById("balance").innerText = balance.toLocaleString();
+                
+                await fetch("server.php", { 
+                    method: "POST", 
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "tap", amount: 10000 }) 
+                });
+            } catch (e) {
+                console.error("Ошибка при воспроизведении звука или связи с сервером", e);
+            }
+        });
     </script>
 </body>
 </html>
