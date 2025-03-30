@@ -22,8 +22,8 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         .tap-btn {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
             background: url('button-image.png') no-repeat center;
             background-size: cover;
             border: none;
@@ -44,26 +44,39 @@
         <button class="tap-btn" id="tapButton"></button>
     </div>
 
-    <script>
-        let balance = 0;
-        let clickSound = new Audio("click.ogg");
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
+        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
 
-        document.getElementById("tapButton").addEventListener("click", async function() {
-            try {
-                clickSound.currentTime = 0;
-                await clickSound.play();
-                
-                balance += 10000;
-                document.getElementById("balance").innerText = balance.toLocaleString();
-                
-                await fetch("server.php", { 
-                    method: "POST", 
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ action: "tap", amount: 10000 }) 
-                });
-            } catch (e) {
-                console.error("Ошибка при воспроизведении звука или связи с сервером", e);
-            }
+        const firebaseConfig = {
+            apiKey: "AIzaSyCO-9l8xEeO83pvgR7pd__BTIVAV9oFzWU",
+            authDomain: "prime-clicker.firebaseapp.com",
+            databaseURL: "https://prime-clicker-default-rtdb.firebaseio.com/",
+            projectId: "prime-clicker",
+            storageBucket: "prime-clicker.appspot.com",
+            messagingSenderId: "714282767423",
+            appId: "1:714282767423:web:3f1d52ad3b36ac9464948a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const userId = "user1";
+        const userRef = ref(db, "users/" + userId);
+
+        async function updateBalance(amount) {
+            const snapshot = await get(userRef);
+            let balance = snapshot.exists() ? snapshot.val().balance : 0;
+            balance += amount;
+            await set(userRef, { balance });
+            document.getElementById("balance").innerText = balance.toLocaleString();
+        }
+
+        let clickSound = new Audio("click.mp3");
+
+        document.getElementById("tapButton").addEventListener("click", () => {
+            clickSound.currentTime = 0;
+            clickSound.play();
+            updateBalance(10000);
         });
     </script>
 </body>
