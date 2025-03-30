@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clicker Mini App</title>
+    <title>Prime Clicker</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
-        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
+        import { getDatabase, ref, get, set, update } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCO-9l8xEeO83pvgR7pd__BTIVAV9oFzWU",
             authDomain: "prime-clicker.firebaseapp.com",
-            databaseURL: "https://prime-clicker-default-rtdb.firebaseio.com",
+            databaseURL: "https://prime-clicker-default-rtdb.firebaseio.com/",
             projectId: "prime-clicker",
             storageBucket: "prime-clicker.appspot.com",
             messagingSenderId: "714282767423",
@@ -21,46 +21,78 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const tg = window.Telegram.WebApp;
-        const userId = tg.initDataUnsafe?.user?.id || "guest";
+        const userId = Telegram.WebApp.initDataUnsafe?.user?.id || "guest";
+        const userRef = ref(db, `users/${userId}`);
 
         let balance = 0;
+        let virts = 0;
+        let energy = 500;
+        let lastReset = new Date().toISOString().split('T')[0]; 
         let clickSound = new Audio("click.mp3");
 
-        function updateBalanceDisplay() {
-            document.getElementById("balance").innerText = balance.toLocaleString();
+        function formatNumber(num) {
+            return num.toLocaleString("de-DE");
         }
 
-        async function loadBalance() {
-            const dbRef = ref(db);
-            try {
-                const snapshot = await get(child(dbRef, `users/${userId}/balance`));
-                if (snapshot.exists()) {
-                    balance = snapshot.val();
-                    updateBalanceDisplay();
+        get(userRef).then(snapshot => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                balance = data.balance || 0;
+                virts = data.virts || 0;
+                energy = data.energy !== undefined ? data.energy : 500;
+                lastReset = data.lastReset || lastReset;
+
+                document.getElementById("balance").innerText = formatNumber(balance);
+                document.getElementById("virts").innerText = formatNumber(virts);
+                document.getElementById("energy").innerText = energy;
+
+                let today = new Date().toISOString().split('T')[0];
+                if (lastReset !== today) {
+                    energy = 500; 
+                    lastReset = today;
+                    update(userRef, { energy, lastReset });
+                    document.getElementById("energy").innerText = energy;
                 }
-            } catch (error) {
-                console.error("Ошибка загрузки баланса", error);
+            } else {
+                set(userRef, { balance: 0, virts: 0, energy: 500, lastReset });
             }
-        }
-
-        async function saveBalance() {
-            try {
-                await set(ref(db, `users/${userId}/balance`), balance);
-            } catch (error) {
-                console.error("Ошибка сохранения баланса", error);
-            }
-        }
-
-        document.addEventListener("DOMContentLoaded", loadBalance);
-
-        document.getElementById("tapButton").addEventListener("click", async function() {
-            clickSound.currentTime = 0;
-            clickSound.play();
-            balance += 10000;
-            updateBalanceDisplay();
-            saveBalance();
         });
+
+        document.getElementById("tapButton").addEventListener("click", function() {
+            if (energy > 0) {
+                clickSound.currentTime = 0;
+                clickSound.play();
+
+                balance += 10000;
+                energy -= 1;
+                document.getElementById("balance").innerText = formatNumber(balance);
+                document.getElementById("energy").innerText = energy;
+
+                update(userRef, { balance, energy });
+            } else {
+                alert("Энергия закончилась! Ждите восстановления.");
+            }
+        });
+
+        document.getElementById("exchangeButton").addEventListener("click", function() {
+            if (balance >= 100000000) {
+                balance -= 100000000;
+                virts += 100000000;
+
+                document.getElementById("balance").innerText = formatNumber(balance);
+                document.getElementById("virts").innerText = formatNumber(virts);
+
+                update(userRef, { balance, virts });
+                alert("Обмен успешен! 100.000.000 тапкоинов = 100.000.000 виртов");
+            } else {
+                alert("Минимальная сумма для обмена - 100.000.000 тапкоинов");
+            }
+        });
+
+        document.getElementById("withdrawButton").addEventListener("click", function() {
+            window.open("https://t.me/prime_vivodbot", "_blank");
+        });
+
     </script>
     <style>
         body {
@@ -78,9 +110,14 @@
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
+        .info {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
         .tap-btn {
-            width: 120px;
-            height: 120px;
+            width: 200px;
+            height: 200px;
             background: url('button-image.png') no-repeat center;
             background-size: cover;
             border: none;
@@ -88,17 +125,43 @@
             cursor: pointer;
             display: inline-block;
             transition: transform 0.1s ease-in-out;
+            outline: none;
         }
         .tap-btn:active {
             transform: scale(0.9);
+        }
+        .exchange-btn, .withdraw-btn {
+            margin-top: 10px;
+            padding: 15px;
+            width: 250px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            outline: none;
+        }
+        .withdraw-btn {
+            background-color: #f44336;
+        }
+        .exchange-btn:active {
+            background-color: #45a049;
+        }
+        .withdraw-btn:active {
+            background-color: #d32f2f;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Tap Clicker</h1>
-        <p>Твои тапкоины: <span id="balance">0</span></p>
+        <h1>Prime Clicker</h1>
+        <p class="info">Тапкоины: <span id="balance">0</span></p>
+        <p class="info">Вирты: <span id="virts">0</span></p>
+        <p class="info">Энергия: <span id="energy">500</span></p>
         <button class="tap-btn" id="tapButton"></button>
+        <button class="exchange-btn" id="exchangeButton">Обмен в вирты</button>
+        <button class="withdraw-btn" id="withdrawButton">Вывод</button>
     </div>
 </body>
 </html>
