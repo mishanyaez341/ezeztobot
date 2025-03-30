@@ -6,11 +6,9 @@
     <title>Clicker Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script type="module">
-        // Firebase SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
-        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
+        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
 
-        // Firebase конфигурация
         const firebaseConfig = {
             apiKey: "AIzaSyCO-9l8xEeO83pvgR7pd__BTIVAV9oFzWU",
             authDomain: "prime-clicker.firebaseapp.com",
@@ -21,35 +19,47 @@
             appId: "1:714282767423:web:3f1d52ad3b36ac9464948a"
         };
 
-        // Инициализация Firebase
         const app = initializeApp(firebaseConfig);
-        const db = getDatabase();
-        const userId = "user123"; // TODO: заменить на реальный ID пользователя
+        const db = getDatabase(app);
+        const tg = window.Telegram.WebApp;
+        const userId = tg.initDataUnsafe?.user?.id || "guest";
+
         let balance = 0;
         let clickSound = new Audio("click.mp3");
 
-        function saveBalance(balance) {
-            set(ref(db, "users/" + userId), { balance });
+        function updateBalanceDisplay() {
+            document.getElementById("balance").innerText = balance.toLocaleString();
         }
 
         async function loadBalance() {
-            const snapshot = await get(ref(db, "users/" + userId));
-            if (snapshot.exists()) {
-                balance = snapshot.val().balance;
-                document.getElementById("balance").innerText = balance.toLocaleString();
+            const dbRef = ref(db);
+            try {
+                const snapshot = await get(child(dbRef, `users/${userId}/balance`));
+                if (snapshot.exists()) {
+                    balance = snapshot.val();
+                    updateBalanceDisplay();
+                }
+            } catch (error) {
+                console.error("Ошибка загрузки баланса", error);
             }
         }
 
-        document.addEventListener("DOMContentLoaded", () => {
-            loadBalance();
-        });
+        async function saveBalance() {
+            try {
+                await set(ref(db, `users/${userId}/balance`), balance);
+            } catch (error) {
+                console.error("Ошибка сохранения баланса", error);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", loadBalance);
 
         document.getElementById("tapButton").addEventListener("click", async function() {
             clickSound.currentTime = 0;
             clickSound.play();
             balance += 10000;
-            document.getElementById("balance").innerText = balance.toLocaleString();
-            saveBalance(balance);
+            updateBalanceDisplay();
+            saveBalance();
         });
     </script>
     <style>
@@ -69,8 +79,8 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         .tap-btn {
-            width: 80px;
-            height: 80px;
+            width: 120px;
+            height: 120px;
             background: url('button-image.png') no-repeat center;
             background-size: cover;
             border: none;
