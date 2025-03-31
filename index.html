@@ -60,6 +60,7 @@
         });
 
         document.getElementById("tapButton").addEventListener("click", function() {
+            const messageBox = document.getElementById("messageBox");
             if (energy > 0) {
                 clickSound.currentTime = 0;
                 clickSound.play();
@@ -71,7 +72,9 @@
 
                 update(userRef, { balance, energy });
             } else {
-                alert("Энергия закончилась! Ждите восстановления.");
+                messageBox.innerText = "❌ Энергия закончилась! Ждите восстановления.";
+                messageBox.style.display = "block";
+                setTimeout(() => { messageBox.style.display = "none"; }, 3000);
             }
         });
 
@@ -105,11 +108,11 @@
             background-color: white;
             color: black;
             margin: 0;
-            padding: 0;
+            padding: 20px;
         }
         .container {
             max-width: 400px;
-            margin: 20px auto;
+            margin: auto;
             background: white;
             padding: 20px;
             border-radius: 10px;
@@ -127,12 +130,11 @@
         .message-box {
             display: none;
             font-size: 14px;
-            margin: 10px auto;
+            margin-top: 10px;
             padding: 10px;
             background-color: white;
             border: 1px solid black;
             border-radius: 5px;
-            width: fit-content;
         }
         .tap-btn {
             width: 200px;
