@@ -28,7 +28,7 @@
         let balance = 0;
         let virts = 0;
         let energy = 500;
-        let lastReset = new Date().toISOString().split('T')[0]; 
+        let lastReset = new Date().toISOString().split('T')[0];
         let clickSound = new Audio("click.mp3");
 
         function formatNumber(num) {
@@ -49,7 +49,7 @@
 
                 let today = new Date().toISOString().split('T')[0];
                 if (lastReset !== today) {
-                    energy = 500; 
+                    energy = 500;
                     lastReset = today;
                     update(userRef, { energy, lastReset });
                     document.getElementById("energy").innerText = energy;
@@ -96,6 +96,58 @@
 
         document.getElementById("withdrawButton").addEventListener("click", function() {
             window.open("https://t.me/prime_vivodbot", "_blank");
+        });
+
+        // Обработчик для ввода промокода с лимитом
+        document.getElementById("promoButton").addEventListener("click", function() {
+            const promoInput = document.getElementById("promoInput").value.trim();
+            const promoRef = ref(db, `promocodes/${promoInput}`);
+
+            get(promoRef).then(snapshot => {
+                const messageBox = document.getElementById("messageBox");
+                if (snapshot.exists()) {
+                    const promoData = snapshot.val();
+                    const limit = promoData.limit || 1; // Лимит активаций промокода
+                    const usedCount = promoData.usedCount || 0;
+
+                    if (usedCount < limit) {
+                        if (!promoData.usedBy || !promoData.usedBy.includes(userId)) {
+                            // Добавляем награды
+                            if (promoData.reward) {
+                                balance += promoData.reward;
+                                update(userRef, { balance });
+                                document.getElementById("balance").innerText = formatNumber(balance);
+                            }
+                            if (promoData.virts) {
+                                virts += promoData.virts;
+                                update(userRef, { virts });
+                                document.getElementById("virts").innerText = formatNumber(virts);
+                            }
+                            if (promoData.energy) {
+                                energy += promoData.energy;
+                                update(userRef, { energy });
+                                document.getElementById("energy").innerText = energy;
+                            }
+
+                            let usedBy = promoData.usedBy ? [...promoData.usedBy, userId] : [userId];
+                            update(promoRef, { usedBy, usedCount: usedCount + 1 });
+
+                            messageBox.innerText = `✅ Промокод активирован! Вы получили: ${formatNumber(promoData.reward || 0)} тапкоинов, ${formatNumber(promoData.virts || 0)} виртов, ${promoData.energy || 0} энергии.`;
+                            messageBox.style.display = "block";
+                        } else {
+                            messageBox.innerText = "❌ Вы уже использовали этот промокод!";
+                            messageBox.style.display = "block";
+                        }
+                    } else {
+                        messageBox.innerText = "❌ Промокод больше нельзя использовать, лимит активаций исчерпан!";
+                        messageBox.style.display = "block";
+                    }
+                } else {
+                    messageBox.innerText = "❌ Неверный промокод!";
+                    messageBox.style.display = "block";
+                }
+                setTimeout(() => { messageBox.style.display = "none"; }, 3000);
+            });
         });
     </script>
     <style>
@@ -149,7 +201,7 @@
         .tap-btn:active {
             transform: scale(0.9);
         }
-        .exchange-btn, .withdraw-btn {
+        .exchange-btn, .withdraw-btn, .promo-btn {
             margin-top: 10px;
             padding: 15px;
             width: 250px;
@@ -165,6 +217,17 @@
         .withdraw-btn {
             background-color: #f44336;
         }
+        /* Размер поля для ввода промокода как на старой странице */
+        #promoInput {
+            width: 342px;
+            height: 40px;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-top: 10px;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
@@ -177,6 +240,9 @@
         <button class="tap-btn" id="tapButton"></button>
         <button class="exchange-btn" id="exchangeButton">Обмен в вирты</button>
         <button class="withdraw-btn" id="withdrawButton">Вывод</button>
+        <!-- Уменьшено поле для ввода промокода до 342x40 -->
+        <input type="text" id="promoInput" placeholder="Введите промокод">
+        <button class="promo-btn" id="promoButton">Активировать</button>
     </div>
 </body>
 </html>
